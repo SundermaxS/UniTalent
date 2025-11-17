@@ -1,23 +1,25 @@
 package com.learnwithiftekhar.auth_demo.service;
 
-import com.learnwithiftekhar.auth_demo.entity.Token;
 import com.learnwithiftekhar.auth_demo.entity.Role;
+import com.learnwithiftekhar.auth_demo.entity.Token;
 import com.learnwithiftekhar.auth_demo.entity.User;
 import com.learnwithiftekhar.auth_demo.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.UrlUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -25,26 +27,32 @@ public class UserService implements UserDetailsService {
     private final TokenService tokenService;
     private final EmailService emailService;
 
-    public UserService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            TokenService tokenService,
-            EmailService emailService
-    ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenService = tokenService;
-        this.emailService = emailService;
-    }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        // Создаём Spring Security User, привязывая enabled/locked
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),                    // username = email
+                user.getPassword(),                 // already encoded
+                user.isEnabled(),                   // enabled
+                true,                               // accountNonExpired
+                true,                               // credentialsNonExpired
+                !user.isLocked(),                   // accountNonLocked
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
+    }
+
+    public Optional<User> findUser(String email){
+        Optional<User> user = userRepository.findByEmail(email);
+        return user;
     }
 
     public User registerUser(User user) {
         // check if user with username or email already exist
-        userRepository.findByUsernameOrEmail(user.getUsername(), user.getEmail())
+        userRepository.findByEmail(user.getEmail())
                 .ifPresent(existingUser -> {
                     throw new IllegalStateException("User already exists");
                 });
@@ -52,6 +60,8 @@ public class UserService implements UserDetailsService {
         String encryptedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encryptedPassword);
         user.setRole(Role.USER);
+        user.setEnabled(false);
+        user.setLocked(false);
 
         userRepository.save(user);
 
@@ -70,13 +80,9 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public void enableUser(User user) {
-        user.setEnabled(true);
-        userRepository.save(user);
-    }
 
     @Transactional
-    public void confirmToken(String token) {
+    public boolean confirmToken(String token) {
         Token confirmationToken = tokenService.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
 
@@ -88,11 +94,16 @@ public class UserService implements UserDetailsService {
 
         if(expiresAt.isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Token expired");
+        }else{
+            confirmationToken.setConfirmedAt(LocalDateTime.now());
+            tokenService.save(confirmationToken);
+            enableUser(confirmationToken.getUser());
+            return true;
         }
+    }
 
-        confirmationToken.setConfirmedAt(LocalDateTime.now());
-        tokenService.save(confirmationToken);
-
-        enableUser(confirmationToken.getUser());
+    private void enableUser(User user) {
+        user.setEnabled(true);
+        userRepository.save(user);
     }
 }
