@@ -12,6 +12,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.learnwithiftekhar.auth_demo.dto.EmployerRegisterRequest;
+import com.learnwithiftekhar.auth_demo.entity.Company;
+import com.learnwithiftekhar.auth_demo.mapper.CompanyMapper;
+import com.learnwithiftekhar.auth_demo.mapper.UserMapper;
+import com.learnwithiftekhar.auth_demo.repository.CompanyRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +31,51 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final EmailService emailService;
+    private final CompanyRepository companyRepository;
+    private final UserMapper userMapper;
+    private final CompanyMapper companyMapper;
 
+    // новый метод:
+    public User registerEmployer(EmployerRegisterRequest dto) {
+        // email уникален
+        userRepository.findByEmail(dto.getEmail())
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("User with this email already exists");
+                });
+
+        // BIN уникален
+        companyRepository.findByBin(dto.getBin())
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Company with this BIN already exists");
+                });
+
+        // маппим DTO -> User
+        User user = userMapper.fromEmployerRegister(dto);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setEnabled(false);
+        user.setLocked(false);
+        user.setRole(Role.USER); // позже можно разделить роли, если захочешь
+
+        userRepository.save(user);
+
+        // маппим DTO -> Company
+        Company company = companyMapper.toEntity(dto, user);
+        companyRepository.save(company);
+
+        // отправляем токен на почту
+        String token = UUID.randomUUID().toString();
+        Token confirmationToken = new Token(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                user
+        );
+
+        tokenService.save(confirmationToken);
+        emailService.sendSimpleMail(user.getEmail(), token);
+
+        return user;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
