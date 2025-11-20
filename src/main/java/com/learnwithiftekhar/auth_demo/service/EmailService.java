@@ -26,14 +26,14 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
 
             message.setTo(to);
-            message.setFrom("learnwithiftekhar@gmail.com");
+            message.setFrom("alser5846@gmail.com");
             message.setSubject("Confirm your email");
             String body = """
 
-                    Hello from Awesome App Team!
+                    Hello from UniTalent Team!
                     Please use the following link to verify your email:
 
-                    http://localhost:8080/register/confirmToken?token=%s
+                    http://localhost:8080/api/auth/confirmToken?token=%s
                     """.formatted(token);
             message.setText(body);
             mailSender.send(message);

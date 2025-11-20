@@ -1,13 +1,14 @@
 package com.learnwithiftekhar.auth_demo.controller;
 
-import com.learnwithiftekhar.auth_demo.entity.User;
+import com.learnwithiftekhar.auth_demo.dto.AuthResponse;
+import com.learnwithiftekhar.auth_demo.dto.LoginRequest;
+import com.learnwithiftekhar.auth_demo.dto.UserRegisterRequest;
 import com.learnwithiftekhar.auth_demo.service.JwtService;
 import com.learnwithiftekhar.auth_demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,45 +23,52 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
+    // 🔹 РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ (через DTO)
     @PostMapping("/register")
-    /**TODO
-     * здесь есть недочет если пользователь введет в джэйсон enable true то сможет с любой почты регаться
-     *  написал возможный вариант решения
-     */
-    public ResponseEntity<String> register(@RequestBody User user) {
-        userService.registerUser(user);
+    public ResponseEntity<String> register(@RequestBody UserRegisterRequest request) {
+        userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User registered. Please check your email to confirm.");
     }
 
+    // 🔹 ПОДТВЕРЖДЕНИЕ EMAIL по токену
     @GetMapping("/confirmToken")
     public ResponseEntity<String> confirmToken(@RequestParam("token") String token) {
         boolean result = userService.confirmToken(token);
-        if (result) return ResponseEntity.ok("Email confirmed successfully!");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token.");
+        if (result) {
+            return ResponseEntity.ok("Email confirmed successfully!");
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Invalid or expired token.");
     }
 
+    // 🔹 ЛОГИН (DTO + JWT в ответе)
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
             );
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            String jwt = jwtService.generateToken(user.getEmail());
+            String jwt = jwtService.generateToken(request.getEmail());
 
-            return ResponseEntity.ok(jwt); // Возвращаем access token
+            // можно вернуть просто строку, но красивее DTO
+            return ResponseEntity.ok(new AuthResponse(jwt));
         } catch (AuthenticationException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
         }
     }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
-        //JWT stateless из за этого "логаут" обычно реализуется на клиенте поэтому не надо писать в спрингсекюрити путь для логаута это обычно для сессий.
-        return ResponseEntity.ok("Logged out (just remove token on client side)");
+        // JWT stateless -> на фронте просто удалить токен из localStorage/cookie
+        return ResponseEntity.ok("Logged out (remove token on client side)");
     }
 
     @PostMapping("/test")
