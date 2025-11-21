@@ -18,6 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -46,9 +52,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",
+                                "/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -64,22 +71,21 @@ public class SecurityConfig {
         return http.build();
     }
 
-//
-//    @Bean
-//    public CommandLineRunner initUser() {
-//        return args -> {
-//            if(userRepository.findByEmail("230103246@sdu.edu.kz").isEmpty()){
-//                User user = new User();
-//                user.setEmail("230103246@sdu.edu.kz");
-//                user.setPassword(passwordEncoder.encode("12345"));
-//                user.setFirstName("Bekarys");
-//                user.setLastName("Absattar");
-//                user.setUsername("undermax88");
-//                user.setRole(Role.USER);
-//                user.setEnabled(true);
-//                userRepository.save(user);
-//            }
-//        };
-//    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        // откуда можно слать запросы (поставь свой порт Live Server’а)
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5500",
+                "http://127.0.0.1:5500"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
 }

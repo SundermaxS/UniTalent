@@ -19,11 +19,9 @@ public class Company {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    // БИН компании
     @Column(name = "bin", nullable = false, unique = true, length = 12)
     private String bin;
 
-    // Юридическое название компании
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -33,7 +31,6 @@ public class Company {
     @Column(name = "description", length = 2000)
     private String description;
 
-    // Владелец аккаунта работодателя
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_company_user"))

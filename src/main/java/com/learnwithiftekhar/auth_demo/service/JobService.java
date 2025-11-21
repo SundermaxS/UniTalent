@@ -23,7 +23,6 @@ public class JobService {
     private final UserService userService;
     private final JobMapper jobMapper;
 
-    // работодатель создаёт вакансию
     public JobResponse createJob(JobCreateRequest dto, UserDetails principal) {
         String email = principal.getUsername();
 
@@ -39,7 +38,6 @@ public class JobService {
         return jobMapper.toDto(job);
     }
 
-    // все открытые вакансии (для студентов)
     public List<JobResponse> getAllActiveJobs() {
         return jobRepository.findByActiveTrue()
                 .stream()
@@ -47,7 +45,6 @@ public class JobService {
                 .toList();
     }
 
-    // вакансии конкретного работодателя
     public List<JobResponse> getMyJobs(UserDetails principal) {
         String email = principal.getUsername();
 

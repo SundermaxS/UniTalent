@@ -46,29 +46,25 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email);
     }
 
-    // 🔹 РЕГИСТРАЦИЯ через DTO
     public User registerUser(UserRegisterRequest request) {
-        // Проверка: email должен быть уникальным
         userRepository.findByEmail(request.getEmail())
                 .ifPresent(existingUser -> {
                     throw new IllegalStateException("User with this email already exists");
                 });
 
-        // Собираем пользователя из DTO
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)     // пока одна роль, потом можно разделить STUDENT/EMPLOYER
+                .role(Role.USER)
                 .enabled(false)
                 .locked(false)
                 .build();
 
         userRepository.save(user);
 
-        // Генерируем токен подтверждения и отправляем письмо
         String token = UUID.randomUUID().toString();
         Token confirmationToken = new Token(
                 token,

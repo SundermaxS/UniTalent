@@ -22,13 +22,11 @@ public class JobApplication {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    // Вакансия
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_application_job"))
     private Job job;
 
-    // Кандидат (User с ролью USER/студент)
     @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_application_candidate"))

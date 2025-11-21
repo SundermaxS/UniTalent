@@ -19,16 +19,16 @@ public class Job {
     private Long id;
 
     @Column(nullable = false)
-    private String title; // например "Java Backend Intern"
+    private String title;
 
     @Column(nullable = false, length = 4000)
     private String description;
 
     @Column
-    private String location; // Almaty / Remote
+    private String location;
 
     @Column
-    private String employmentType; // full-time, part-time, internship
+    private String employmentType;
 
     @Column
     private Integer minSalary;
@@ -40,7 +40,7 @@ public class Job {
     private LocalDateTime createdAt;
 
     @Column
-    private Boolean active; // открыта вакансия или закрыта
+    private Boolean active;
 
     @ManyToOne
     @JoinColumn(name = "company_id",

@@ -23,7 +23,6 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    // 🔹 РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ (через DTO)
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserRegisterRequest request) {
         userService.registerUser(request);
@@ -31,7 +30,6 @@ public class AuthenticationController {
                 .body("User registered. Please check your email to confirm.");
     }
 
-    // 🔹 ПОДТВЕРЖДЕНИЕ EMAIL по токену
     @GetMapping("/confirmToken")
     public ResponseEntity<String> confirmToken(@RequestParam("token") String token) {
         boolean result = userService.confirmToken(token);
@@ -42,7 +40,6 @@ public class AuthenticationController {
                 .body("Invalid or expired token.");
     }
 
-    // 🔹 ЛОГИН (DTO + JWT в ответе)
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
@@ -57,7 +54,6 @@ public class AuthenticationController {
 
             String jwt = jwtService.generateToken(request.getEmail());
 
-            // можно вернуть просто строку, но красивее DTO
             return ResponseEntity.ok(new AuthResponse(jwt));
         } catch (AuthenticationException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -67,7 +63,6 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
-        // JWT stateless -> на фронте просто удалить токен из localStorage/cookie
         return ResponseEntity.ok("Logged out (remove token on client side)");
     }
 

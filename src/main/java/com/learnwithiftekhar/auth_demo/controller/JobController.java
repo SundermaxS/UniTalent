@@ -19,9 +19,6 @@ public class JobController {
     private final JobService jobService;
     private final JobApplicationService jobApplicationService;
 
-    // -------- ДЛЯ РАБОТОДАТЕЛЕЙ --------
-
-    // создать вакансию (нужен JWT работодателя)
     @PostMapping
     public ResponseEntity<JobResponse> createJob(
             @RequestBody JobCreateRequest request,
@@ -30,7 +27,6 @@ public class JobController {
         return ResponseEntity.ok(jobService.createJob(request, principal));
     }
 
-    // мои вакансии
     @GetMapping("/my")
     public ResponseEntity<List<JobResponse>> getMyJobs(
             @AuthenticationPrincipal UserDetails principal
@@ -38,7 +34,6 @@ public class JobController {
         return ResponseEntity.ok(jobService.getMyJobs(principal));
     }
 
-    // все отклики на мои вакансии
     @GetMapping("/my/applications")
     public ResponseEntity<List<JobApplicationResponse>> getApplicationsForMyJobs(
             @AuthenticationPrincipal UserDetails principal
@@ -46,15 +41,11 @@ public class JobController {
         return ResponseEntity.ok(jobApplicationService.getApplicationsForMyJobs(principal));
     }
 
-    // -------- ДЛЯ СТУДЕНТОВ --------
-
-    // список всех открытых вакансий
     @GetMapping
     public ResponseEntity<List<JobResponse>> getAllActiveJobs() {
         return ResponseEntity.ok(jobService.getAllActiveJobs());
     }
 
-    // отклик на вакансию
     @PostMapping("/{jobId}/apply")
     public ResponseEntity<JobApplicationResponse> apply(
             @PathVariable Long jobId,
@@ -68,7 +59,6 @@ public class JobController {
         return ResponseEntity.ok(jobApplicationService.apply(request, principal));
     }
 
-    // мои отклики (как студент)
     @GetMapping("/applications/my")
     public ResponseEntity<List<JobApplicationResponse>> getMyApplications(
             @AuthenticationPrincipal UserDetails principal

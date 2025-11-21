@@ -25,7 +25,6 @@ public class JobApplicationService {
     private final UserService userService;
     private final JobApplicationMapper jobApplicationMapper;
 
-    // студент откликается на вакансию
     public JobApplicationResponse apply(JobApplicationCreateRequest dto, UserDetails principal) {
         String email = principal.getUsername();
 
@@ -49,7 +48,6 @@ public class JobApplicationService {
         return jobApplicationMapper.toDto(application);
     }
 
-    // студент смотрит свои отклики
     public List<JobApplicationResponse> getMyApplications(UserDetails principal) {
         String email = principal.getUsername();
 
@@ -62,7 +60,6 @@ public class JobApplicationService {
                 .toList();
     }
 
-    // работодатель смотрит отклики на свои вакансии
     public List<JobApplicationResponse> getApplicationsForMyJobs(UserDetails principal) {
         String email = principal.getUsername();
 
