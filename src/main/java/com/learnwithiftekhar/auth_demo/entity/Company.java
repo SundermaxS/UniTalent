@@ -22,14 +22,17 @@ public class Company {
     @Column(name = "bin", nullable = false, unique = true, length = 12)
     private String bin;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "companyName", nullable = false)
+    private String companyName;
 
     @Column(name = "website")
     private String website;
 
     @Column(name = "description", length = 2000)
     private String description;
+
+    @Column(name = "approved")
+    private boolean approved;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false,
