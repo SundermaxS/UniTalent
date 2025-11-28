@@ -37,7 +37,7 @@ public class JobApplicationService {
         JobApplication application = JobApplication.builder()
                 .job(job)
                 .candidate(candidate)
-                .resumeUrl(null) // позже подставим URL из S3
+                .resumeUrl(null) // TODO URL
                 .coverLetter(dto.getCoverLetter())
                 .createdAt(LocalDateTime.now())
                 .status(ApplicationStatus.PENDING)

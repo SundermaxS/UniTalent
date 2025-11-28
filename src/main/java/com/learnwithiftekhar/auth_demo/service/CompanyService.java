@@ -53,7 +53,6 @@ public class CompanyService{
 
         companyRepository.save(employer);
 
-        // уведомление админу: кого надо рассмотреть
         emailService.sendEmployerApprovalNotification(ADMIN_EMAIL, employer);
     }
 

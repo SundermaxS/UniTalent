@@ -9,9 +9,9 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true)      // шифруем в сервисе
+    @Mapping(target = "password", ignore = true)
     @Mapping(target = "enabled", constant = "false")
     @Mapping(target = "locked", constant = "false")
-    @Mapping(target = "role", constant = "USER")      // ← вот здесь меняем
+    @Mapping(target = "role", constant = "USER")
     User fromEmployerRegister(EmployerRegisterRequest dto);
 }

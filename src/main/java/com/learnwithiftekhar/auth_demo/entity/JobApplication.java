@@ -32,7 +32,7 @@ public class JobApplication {
             foreignKey = @ForeignKey(name = "fk_application_candidate"))
     private User candidate;
 
-    // На будущее — URL резюме в S3 (пока можно хранить null)
+    // TODO На будущее — URL
     @Column
     private String resumeUrl;
 

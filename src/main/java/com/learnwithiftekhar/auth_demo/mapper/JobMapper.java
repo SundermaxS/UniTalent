@@ -12,7 +12,7 @@ public interface JobMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", source = "dto.title")
-    @Mapping(target = "description", source = "dto.description")      // ⚠ берём из dto
+    @Mapping(target = "description", source = "dto.description")
     @Mapping(target = "location", source = "dto.location")
     @Mapping(target = "employmentType", source = "dto.employmentType")
     @Mapping(target = "minSalary", source = "dto.minSalary")
@@ -22,7 +22,7 @@ public interface JobMapper {
     @Mapping(target = "active", constant = "true")
     Job toEntity(JobCreateRequest dto, Company company);
 
-    @Mapping(target = "companyName", source = "company.name")
+    @Mapping(target = "companyName", source = "company.companyName")
     @Mapping(target = "companyBin", source = "company.bin")
     JobResponse toDto(Job job);
 }
