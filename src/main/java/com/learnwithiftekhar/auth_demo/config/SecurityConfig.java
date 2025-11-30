@@ -1,5 +1,7 @@
 package com.learnwithiftekhar.auth_demo.config;
 
+import com.learnwithiftekhar.auth_demo.entity.Role;
+import com.learnwithiftekhar.auth_demo.entity.User;
 import com.learnwithiftekhar.auth_demo.repository.UserRepository;
 import com.learnwithiftekhar.auth_demo.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -87,4 +89,23 @@ public class SecurityConfig {
         return source;
     }
 
+    @Bean
+    public CommandLineRunner initUser(){
+        return args -> {
+            if(userRepository.findByEmail("230103@sdu.edu.kz").isEmpty()){
+                User user = User.builder()
+                        .firstName("John")
+                        .lastName("Doe")
+                        .email("230103246@sdu.edu.kz")
+                        .password(passwordEncoder.encode("12345"))
+                        .role(Role.USER)
+                        .enabled(true)
+                        .locked(false)
+                        .username("user")
+                        .phoneNumber("77777777")
+                        .build();
+                userRepository.save(user);
+            }
+        };
+    }
 }

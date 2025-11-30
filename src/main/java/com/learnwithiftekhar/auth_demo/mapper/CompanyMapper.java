@@ -11,7 +11,7 @@ public interface CompanyMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bin", source = "dto.bin")
-    @Mapping(target = "name", source = "dto.companyName")
+    @Mapping(target = "companyName", source = "dto.companyName")
     @Mapping(target = "website", source = "dto.website")
     @Mapping(target = "description", source = "dto.description")
     @Mapping(target = "user", source = "user")

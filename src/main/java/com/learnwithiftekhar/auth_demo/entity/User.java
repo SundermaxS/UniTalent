@@ -48,6 +48,12 @@ public class User implements UserDetails {
     @Column(name = "phoneNumber", unique = true)
     private String phoneNumber;
 
+    @Column
+    private String resumeUrl;
+
+    @Column
+    private String resumePublicId;
+
     @Column(name = "enabled")
     private boolean enabled;
 
