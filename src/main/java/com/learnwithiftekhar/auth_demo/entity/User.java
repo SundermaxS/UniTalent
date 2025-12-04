@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,21 +49,43 @@ public class User implements UserDetails {
     @Column(name = "phoneNumber", unique = true)
     private String phoneNumber;
 
-    @Column
+    @Column(name = "resume_url", unique = true)
     private String resumeUrl;
 
-    @Column
+    @Column(name = "resume_public_id", unique = true)
     private String resumePublicId;
+
+    @Column(name = "linkedin_url", unique = true)
+    private String linkedinUrl;
+
+    @Column(name = "github_url", unique = true)
+    private String githubUrl;
+
+    @Column(name = "gpa")
+    private String gpa;
+
+    @Column(name = "program_class")
+    private String programClass;
+
+    @Column(columnDefinition = "jsonb")
+    private String schedule;
+
+    @Column(columnDefinition = "text")
+    private String transcript;
+
+    @Column(name = "skills")
+    private String skills;
+
+//    ---------------------------------------------->
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @Column(name = "enabled")
     private boolean enabled;
 
     @Column(name = "locked")
     private boolean locked;
-
-    @Enumerated(EnumType.STRING)
-    private Role role;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -23,25 +23,9 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserRegisterRequest request) {
-        userService.registerUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("User registered. Please check your email to confirm.");
-    }
-
-    @GetMapping("/confirmToken")
-    public ResponseEntity<String> confirmToken(@RequestParam("token") String token) {
-        boolean result = userService.confirmToken(token);
-        if (result) {
-            return ResponseEntity.ok("Email confirmed successfully!");
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Invalid or expired token.");
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> register(@RequestBody UserRegisterRequest request) {
+        userService.registerUser(request);
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -60,6 +44,37 @@ public class AuthenticationController {
                     .body("Invalid email or password");
         }
     }
+
+//    @GetMapping("/confirmToken")
+//    public ResponseEntity<String> confirmToken(@RequestParam("token") String token) {
+//        boolean result = userService.confirmToken(token);
+//        if (result) {
+//            return ResponseEntity.ok("Email confirmed successfully!");
+//        }
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                .body("Invalid or expired token.");
+//    }
+
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+//        try {
+//            Authentication auth = authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(
+//                            request.getEmail(),
+//                            request.getPassword()
+//                    )
+//            );
+//
+//            SecurityContextHolder.getContext().setAuthentication(auth);
+//
+//            String jwt = jwtService.generateToken(request.getEmail());
+//
+//            return ResponseEntity.ok(new AuthResponse(jwt));
+//        } catch (AuthenticationException ex) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body("Invalid email or password");
+//        }
+//    }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {

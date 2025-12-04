@@ -62,7 +62,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/api/employers"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -89,23 +90,23 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public CommandLineRunner initUser(){
-        return args -> {
-            if(userRepository.findByEmail("230103@sdu.edu.kz").isEmpty()){
-                User user = User.builder()
-                        .firstName("John")
-                        .lastName("Doe")
-                        .email("230103246@sdu.edu.kz")
-                        .password(passwordEncoder.encode("12345"))
-                        .role(Role.USER)
-                        .enabled(true)
-                        .locked(false)
-                        .username("user")
-                        .phoneNumber("77777777")
-                        .build();
-                userRepository.save(user);
-            }
-        };
-    }
+//    @Bean
+//    public CommandLineRunner initUser(){
+//        return args -> {
+//            if(userRepository.findByEmail("230103@sdu.edu.kz").isEmpty()){
+//                User user = User.builder()
+//                        .firstName("John")
+//                        .lastName("Doe")
+//                        .email("230103246@sdu.edu.kz")
+//                        .password(passwordEncoder.encode("12345"))
+//                        .role(Role.USER)
+//                        .enabled(true)
+//                        .locked(false)
+//                        .username("user")
+//                        .phoneNumber("77777777")
+//                        .build();
+//                userRepository.save(user);
+//            }
+//        };
+//    }
 }

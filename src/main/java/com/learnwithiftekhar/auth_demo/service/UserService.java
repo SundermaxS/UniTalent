@@ -1,21 +1,21 @@
 package com.learnwithiftekhar.auth_demo.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnwithiftekhar.auth_demo.dto.UserRegisterRequest;
 import com.learnwithiftekhar.auth_demo.entity.Role;
-import com.learnwithiftekhar.auth_demo.entity.Token;
 import com.learnwithiftekhar.auth_demo.entity.User;
 import com.learnwithiftekhar.auth_demo.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +23,8 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
     private final EmailService emailService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -47,62 +47,54 @@ public class UserService implements UserDetailsService {
     }
 
     public User registerUser(UserRegisterRequest request) {
-        userRepository.findByEmail(request.getEmail())
-                .ifPresent(existingUser -> {
-                    throw new IllegalStateException("User with this email already exists");
-                });
-
-        User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .enabled(false)
-                .locked(false)
-                .build();
-
-        userRepository.save(user);
-
-        String token = UUID.randomUUID().toString();
-        Token confirmationToken = new Token(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(15),
-                user
+        RestTemplate rest = new RestTemplate();
+        Map<String, String> body = Map.of(
+                "username", request.getEmail().substring(0, 9),
+                "password", request.getPassword()
         );
 
-        tokenService.save(confirmationToken);
-        emailService.sendSimpleMail(user.getEmail(), token);
+        String pythonUrl = "http://python-service:5000/process";
 
-        return user;
-    }
+        Map response = rest.postForObject(pythonUrl, body, Map.class);
 
-    @Transactional
-    public boolean confirmToken(String token) {
-        Token confirmationToken = tokenService.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+        User student;
 
-        if (confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("User already confirmed");
+        try {
+            String fullName = (String) response.get("fullname");
+            String[] nameParts = fullName.split(" ");
+            String firstName = nameParts.length > 0 ? nameParts[0] : "";
+            String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+            Object scheduleObj = response.get("schedule");
+            String scheduleJson = scheduleObj != null
+                    ? objectMapper.writeValueAsString(scheduleObj)
+                    : null;
+
+            String email = request.getEmail();
+            String safeUsername = email.length() >= 9
+                    ? email.substring(0, 9)
+                    : email;
+
+            student = User.builder()
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .username(safeUsername)
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .email(email)
+                    .phoneNumber((String) response.get("contact_number"))
+                    .schedule(scheduleJson)
+                    .programClass((String) response.get("program_class"))
+                    .transcript((String) response.get("transcript_print_html"))
+                    .role(Role.USER)
+                    .enabled(true)
+                    .locked(false)
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot process user registration", e);
         }
 
-        LocalDateTime expiresAt = confirmationToken.getExpiresAt();
-
-        if (expiresAt.isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Token expired");
-        } else {
-            confirmationToken.setConfirmedAt(LocalDateTime.now());
-            tokenService.save(confirmationToken);
-            enableUser(confirmationToken.getUser());
-            return true;
-        }
-    }
-
-    private void enableUser(User user) {
-        user.setEnabled(true);
-        userRepository.save(user);
+        userRepository.save(student);
+        return student;
     }
 }
