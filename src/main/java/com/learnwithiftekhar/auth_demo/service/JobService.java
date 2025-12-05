@@ -11,6 +11,9 @@ import com.learnwithiftekhar.auth_demo.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 import java.util.List;
 
@@ -59,4 +62,10 @@ public class JobService {
                 .map(jobMapper::toDto)
                 .toList();
     }
+
+    public Page<JobResponse> getAllActiveJobsPaged(Pageable pageable) {
+        return jobRepository.findByActiveTrue(pageable)
+                .map(jobMapper::toDto);
+    }
+
 }

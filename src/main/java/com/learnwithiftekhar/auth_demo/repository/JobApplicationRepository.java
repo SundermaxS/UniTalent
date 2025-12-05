@@ -14,4 +14,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByJob(Job job);
 
     List<JobApplication> findByJobIn(List<Job> jobs);
+
+    boolean existsByJobAndCandidate(Job job, User candidate);
+
 }
