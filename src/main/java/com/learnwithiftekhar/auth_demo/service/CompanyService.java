@@ -52,7 +52,6 @@ public class CompanyService{
                 .build();
 
         companyRepository.save(employer);
-
         emailService.sendEmployerApprovalNotification(ADMIN_EMAIL, employer);
     }
 

@@ -58,6 +58,9 @@ public class UserService implements UserDetailsService {
         Map response = rest.postForObject(pythonUrl, body, Map.class);
 
         User student;
+        if(userRepository.findByEmail(request.getEmail()).isPresent()){
+            student = userRepository.findByEmail(request.getEmail()).get();
+        }
 
         try {
             String fullName = (String) response.get("fullname");
