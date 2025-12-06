@@ -1,15 +1,21 @@
 package com.learnwithiftekhar.auth_demo.controller;
 
-import com.learnwithiftekhar.auth_demo.dto.EmployerRegisterRequest;
-import com.learnwithiftekhar.auth_demo.dto.JobApplicationResponse;
-import com.learnwithiftekhar.auth_demo.dto.StudentSummaryResponse;
+import com.learnwithiftekhar.auth_demo.dto.*;
 import com.learnwithiftekhar.auth_demo.entity.Company;
 import com.learnwithiftekhar.auth_demo.service.CompanyService;
 import com.learnwithiftekhar.auth_demo.service.EmployerService;
+import com.learnwithiftekhar.auth_demo.service.JwtService;
+import com.learnwithiftekhar.auth_demo.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -25,6 +31,9 @@ public class EmployerController {
 
     private final CompanyService companyService;
     private final EmployerService employerService;
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> registerEmployer(@RequestBody EmployerRegisterRequest request) {
@@ -32,6 +41,27 @@ public class EmployerController {
         return ResponseEntity.ok(
                 "Ваш запрос работодателя отправлен. После одобрения админом ваша роль станет EMPLOYER."
         );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> register(@RequestBody UserRegisterRequest request) {
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            String jwt = jwtService.generateToken(request.getEmail());
+
+            return ResponseEntity.ok(new AuthResponse(jwt, request.getEmail()));
+        } catch (AuthenticationException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
+        }
     }
 
     public record PendingEmployerDto(
@@ -72,17 +102,6 @@ public class EmployerController {
     }
 
     @PreAuthorize("hasAnyRole('EMPLOYER','ADMIN')")
-    @GetMapping("/students")
-    public ResponseEntity<Page<StudentSummaryResponse>> getStudents(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(employerService.getStudents(pageable));
-    }
-
-    // ✅ пригласить студента на конкретную вакансию работодателя
-    @PreAuthorize("hasAnyRole('EMPLOYER','ADMIN')")
     @PostMapping("/jobs/{jobId}/invite/{studentId}")
     public ResponseEntity<JobApplicationResponse> inviteStudent(
             @PathVariable Long jobId,
@@ -93,4 +112,20 @@ public class EmployerController {
                 employerService.inviteStudentToJob(jobId, studentId, principal)
         );
     }
+
+    @PreAuthorize("hasAnyRole('EMPLOYER','ADMIN')")
+    @GetMapping("/students")
+    public ResponseEntity<Page<StudentSummaryResponse>> getStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String programClass,
+            @RequestParam(required = false) Double gpaMin,
+            @RequestParam(required = false) Double gpaMax
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(
+                employerService.getStudentsFiltered(programClass, gpaMin, gpaMax, pageable)
+        );
+    }
+
 }

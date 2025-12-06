@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 public class EmployerService {
 
     private final UserService userService;
+    private final EmailService emailService;
+
     private final UserRepository userRepository;
 
     private final CompanyRepository companyRepository;
@@ -61,7 +63,6 @@ public class EmployerService {
             throw new IllegalStateException("Only students can be invited");
         }
 
-        // ✅ Защита от дубликата
         if (jobApplicationRepository.existsByJobAndCandidate(job, student)) {
             throw new IllegalStateException("This student already has an application for this job");
         }
@@ -77,6 +78,24 @@ public class EmployerService {
 
         jobApplicationRepository.save(invitation);
 
+        emailService.sendJobInvitationNotification(
+                student.getEmail(),
+                company,
+                job,
+                student
+        );
+
         return jobApplicationMapper.toDto(invitation);
     }
+
+    public Page<StudentSummaryResponse> getStudentsFiltered(
+            String programClass,
+            Double gpaMin,
+            Double gpaMax,
+            Pageable pageable
+    ) {
+        return userRepository.findStudentsFiltered(programClass, gpaMin, gpaMax, pageable)
+                .map(studentMapper::toDto);
+    }
+
 }

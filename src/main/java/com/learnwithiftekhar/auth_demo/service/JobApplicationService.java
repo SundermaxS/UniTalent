@@ -76,4 +76,28 @@ public class JobApplicationService {
                 .map(jobApplicationMapper::toDto)
                 .toList();
     }
+
+    public JobApplicationResponse respondToInvitation(
+            Long applicationId,
+            JobApplication.ApplicationStatus newStatus,
+            UserDetails principal
+    ) {
+        String email = principal.getUsername();
+
+        User candidate = userService.findUser(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        JobApplication application = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalStateException("Application not found"));
+
+        if (!application.getCandidate().getId().equals(candidate.getId())) {
+            throw new IllegalStateException("You cannot update чужую заявку");
+        }
+
+        application.setStatus(newStatus);
+        jobApplicationRepository.save(application);
+
+        return jobApplicationMapper.toDto(application);
+    }
+
 }

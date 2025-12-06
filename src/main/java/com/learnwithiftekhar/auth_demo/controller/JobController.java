@@ -1,6 +1,7 @@
 package com.learnwithiftekhar.auth_demo.controller;
 
 import com.learnwithiftekhar.auth_demo.dto.*;
+import com.learnwithiftekhar.auth_demo.entity.JobApplication;
 import com.learnwithiftekhar.auth_demo.service.JobApplicationService;
 import com.learnwithiftekhar.auth_demo.service.JobService;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,28 @@ public class JobController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(jobService.getAllActiveJobsPaged(pageable));
+    }
+
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @PostMapping("/applications/{applicationId}/accept")
+    public ResponseEntity<JobApplicationResponse> acceptInvitation(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        return ResponseEntity.ok(
+                jobApplicationService.respondToInvitation(applicationId, JobApplication.ApplicationStatus.ACCEPTED, principal)
+        );
+    }
+
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @PostMapping("/applications/{applicationId}/reject")
+    public ResponseEntity<JobApplicationResponse> rejectInvitation(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        return ResponseEntity.ok(
+                jobApplicationService.respondToInvitation(applicationId, JobApplication.ApplicationStatus.REJECTED, principal)
+        );
     }
 
 }
