@@ -53,7 +53,7 @@ public class UserService implements UserDetailsService {
                 "password", request.getPassword()
         );
 
-        String pythonUrl = "http://python-service:5000/process";
+        String pythonUrl = "http://localhost:5000/get-user-data";
 
         Map response = rest.postForObject(pythonUrl, body, Map.class);
 
