@@ -67,7 +67,7 @@ public class ResumeController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> updateMyResume(
             @RequestParam("file") MultipartFile file,
-            UserDetails principal
+            @AuthenticationPrincipal UserDetails principal
     ) {
         return uploadMyResume(file, principal);
     }

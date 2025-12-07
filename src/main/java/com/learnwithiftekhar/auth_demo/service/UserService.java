@@ -49,7 +49,7 @@ public class UserService implements UserDetailsService {
     public User registerUser(UserRegisterRequest request) {
         RestTemplate rest = new RestTemplate();
         Map<String, String> body = Map.of(
-                "username", request.getEmail().substring(0, 9),
+                "student_id", request.getEmail().substring(0, 9),
                 "password", request.getPassword()
         );
 
